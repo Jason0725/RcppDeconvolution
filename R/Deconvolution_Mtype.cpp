@@ -93,6 +93,50 @@ arma::vec EstimateCATE(arma::vec X_predict,arma::vec Y,arma::vec D,arma::vec Z, 
   return Num.t()/Den.t()/px - Num2.t()/Den.t()/(1-px);
 }
 
+double NWDecbinUknown(arma::vec W, arma::vec Y,arma::vec D, int errortype, double sigU, double h, double rhogrid, arma::vec midbin
+                        ,arma::uvec indbin, int nbin, double hstage1, double rho1){
+  double dt = 0.001;
+  vec t = linspace(-1,1,2001);
+  int n = W.n_elem;
+  
+  vec th = t/h;
+  int longt = 2001;
+  
+  mat OO = ones(n) * th.t();
+  OO= W * ones(1,2001) % OO;
+  
+  mat csO=cos(OO);
+  mat snO=sin(OO);
+  
+  
+  mat rehatphiW=sum(csO,0);
+  mat imhatphiW=sum(snO,0);
+  
+  mat renum=(Y % D).t()*csO;
+  mat imnum=(Y % D).t()*snO;
+  
+  mat renum2=(Y % (1-D)).t()*csO;
+  mat imnum2=(Y % (1-D)).t()*snO;
+  
+  mat xt= th* (ones(nbin).t());
+  xt=xt % (ones(longt) * midbin.t());
+  mat cxt=cos(xt);
+  mat sxt=sin(xt);
+  
+  
+  cxt = cxt.rows(indbin);
+  sxt = sxt.rows(indbin);
+  
+  vec phiUth=phiU(th,sigU);
+  
+  vec matphiKU = phiK(t)/phiUth;
+  
+  mat matphiKUm = matphiKU.t();
+  mat Den=(rehatphiW % matphiKUm)*cxt+(imhatphiW % matphiKUm)*sxt;
+  mat Num=(renum % matphiKUm)*cxt+(imnum % matphiKUm)*sxt;
+  mat Num2 = (renum2 % matphiKUm)*cxt+(imnum2 % matphiKUm)*sxt;
+}
+      
 //[[Rcpp::export]]
 void test(){
   int i;
